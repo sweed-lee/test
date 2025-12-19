@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Canvas 躲避方块小游戏</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="game-wrapper">
+      <header>
+        <h1>躲避下落方块</h1>
+        <p class="subtitle">使用方向键或 WASD 移动，存活越久得分越高。</p>
+      </header>
+
+      <section class="control-panel">
+        <div class="buttons">
+          <button id="startBtn">开始</button>
+          <button id="pauseBtn">暂停</button>
+          <button id="restartBtn">重开</button>
+        </div>
+        <div class="status">
+          <span>得分：<strong id="score">0</strong></span>
+          <span>状态：<strong id="statusText">等待开始</strong></span>
+        </div>
+      </section>
+
+      <canvas id="gameCanvas" width="480" height="640" aria-label="躲避方块画布"></canvas>
+
+      <section class="tips">
+        <h2>玩法提示</h2>
+        <ul>
+          <li>方向键或 WASD 控制蓝色方块左右移动。</li>
+          <li>红色方块会逐渐加速、数量增多，保持专注！</li>
+          <li>按“重开”即可立即重新开始。</li>
+        </ul>
+      </section>
+    </main>
+
+    <script src="game.js"></script>
+  </body>
+</html>
