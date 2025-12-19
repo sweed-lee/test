@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Canvas 躲避方块小游戏</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="game-wrapper">
+      <section class="hud">
+        <h1>躲避坠落方块</h1>
+        <div class="stats">
+          <div>分数：<span id="score">0</span></div>
+          <div>难度：<span id="difficulty">1.0x</span></div>
+          <div>状态：<span id="status">准备中</span></div>
+        </div>
+        <div class="controls">
+          <button id="startBtn">开始</button>
+          <button id="pauseBtn">暂停</button>
+          <button id="restartBtn">重开</button>
+        </div>
+        <p class="hint">使用方向键或 WASD 控制绿色方块，避免碰到红色障碍。</p>
+      </section>
+      <canvas id="gameCanvas" width="480" height="640"></canvas>
+    </main>
+    <script src="game.js"></script>
+  </body>
+</html>
