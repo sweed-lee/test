@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meteor Dodge</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <section class="hud">
+        <div class="logo" aria-label="Game title">Meteor Dodge</div>
+        <div class="stats" aria-live="polite">
+          <div class="stat">
+            <span class="label">Score</span>
+            <span id="scoreValue" class="value">0</span>
+          </div>
+          <div class="stat">
+            <span class="label">Difficulty</span>
+            <span id="difficultyValue" class="value">1.0x</span>
+          </div>
+        </div>
+        <div class="buttons" aria-label="Game controls">
+          <button id="startButton" type="button">Start</button>
+          <button id="pauseButton" type="button" disabled>Pause</button>
+          <button id="restartButton" type="button" disabled>Restart</button>
+        </div>
+      </section>
+
+      <section class="canvas-wrapper">
+        <canvas
+          id="gameCanvas"
+          width="480"
+          height="640"
+          role="img"
+          aria-label="Meteor Dodge playfield"
+        ></canvas>
+        <div class="overlay" id="overlay">
+          <div class="card">
+            <h2 id="statusHeading">Meteor Dodge</h2>
+            <p id="overlayMessage">
+              Dodge every meteor for as long as you can. The longer you stay
+              alive, the faster the storm becomes.
+            </p>
+            <ul class="tips">
+              <li>Left/Right Arrow or A/D - move horizontally</li>
+              <li>Up/Down Arrow or W/S - adjust vertically</li>
+              <li>Space - quick pause/resume</li>
+            </ul>
+            <button id="overlayButton" type="button">Play</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./game.js"></script>
+  </body>
+</html>
