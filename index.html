@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>避开坠落方块 - Canvas Demo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <section class="hud">
+      <h1>避开坠落方块</h1>
+      <div class="stats">
+        <p>分数：<span id="score">0</span></p>
+        <p>难度：<span id="difficulty">1.00x</span></p>
+        <p id="status">准备开始</p>
+      </div>
+      <div class="controls">
+        <button id="startBtn">开始</button>
+        <button id="pauseBtn">暂停</button>
+        <button id="restartBtn">重开</button>
+      </div>
+      <p class="instructions">
+        操作方式：方向键或 WASD 控制方块移动。尽量躲避自上而下的障碍，
+        生存时间越长、速度越快，得分越高。
+      </p>
+    </section>
+    <canvas id="gameCanvas" width="640" height="420" aria-label="躲避方块画布"></canvas>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
