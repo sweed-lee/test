@@ -1,0 +1,106 @@
+:root {
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: #f6f9ff;
+  background: #0f172a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top, #1d2b53 0%, #0f172a 60%);
+}
+
+.game-container {
+  width: min(900px, 95vw);
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.85);
+  box-shadow: 0 30px 60px rgba(6, 11, 25, 0.65);
+  border: 1px solid rgba(94, 234, 212, 0.2);
+}
+
+header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+header h1 {
+  margin: 0 0 0.25rem;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.top-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.stat {
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.controls button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.4rem 1.3rem;
+  font-weight: 600;
+  color: #0f172a;
+  background: #5eead4;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.controls button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(94, 234, 212, 0.35);
+}
+
+.controls button:active {
+  transform: translateY(1px);
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  max-width: 800px;
+  height: auto;
+  margin: 0 auto;
+  background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
+  border-radius: 16px;
+  border: 2px solid rgba(94, 234, 212, 0.35);
+}
+
+.instructions {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.95rem;
+  color: rgba(246, 249, 255, 0.8);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(94, 234, 212, 0.15);
+  border: 1px solid rgba(94, 234, 212, 0.35);
+  font-size: 0.9rem;
+}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Falling Blocks Dodge</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="game-container">
+      <header>
+        <h1>Falling Blocks Dodge</h1>
+        <p>用方向键或 WASD 控制蓝色方块，躲避下落的障碍。</p>
+      </header>
+
+      <section class="top-bar">
+        <div class="stat">得分：<span id="score">0</span></div>
+        <div class="stat">难度：<span id="level">1</span></div>
+        <div class="controls">
+          <button id="startBtn">开始</button>
+          <button id="pauseBtn">暂停</button>
+          <button id="restartBtn">重开</button>
+        </div>
+      </section>
+
+      <canvas id="game" width="800" height="520" aria-label="躲避方块游戏画布"></canvas>
+
+      <section class="instructions">
+        <p>
+          键盘：<strong>←/→</strong> 或 <strong>A/D</strong> 移动，<strong>P</strong> 暂停/继续，
+          <strong>R</strong> 重开，<strong>Space</strong> 快速开始。
+        </p>
+      </section>
+    </main>
+
+    <script src="game.js"></script>
+  </body>
+</html>
