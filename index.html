@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Time-Loop Runner</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #121212;
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        color: #f4f4f4;
+      }
+      .game-wrapper {
+        width: 660px;
+        max-width: 90vw;
+        text-align: center;
+      }
+      h1 {
+        margin-bottom: 0.2rem;
+        letter-spacing: 0.08em;
+        color: #ffd700;
+        text-transform: uppercase;
+      }
+      p.subtitle {
+        margin-top: 0;
+        opacity: 0.7;
+        font-size: 0.9rem;
+      }
+      #hud {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        gap: 0.5rem;
+      }
+      #scoreboard {
+        text-align: left;
+        flex: 1;
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+      button {
+        background: transparent;
+        border: 1px solid #ffd700;
+        color: #ffd700;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease;
+      }
+      button:hover {
+        background: #ffd700;
+        color: #121212;
+        transform: translateY(-1px);
+      }
+      button:active {
+        transform: translateY(1px) scale(0.98);
+      }
+      #gameCanvas {
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #1c1c1c, #0c0c0c);
+        box-shadow: 0 20px 35px rgba(0, 0, 0, 0.5);
+      }
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      .overlay.active {
+        opacity: 1;
+        pointer-events: all;
+      }
+      .overlay-card {
+        background: #1b1a20;
+        padding: 2rem;
+        border-radius: 18px;
+        width: min(90vw, 420px);
+        text-align: left;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7);
+        transition: transform 0.3s ease;
+      }
+      .overlay.active .overlay-card {
+        transform: translateY(0);
+      }
+      .overlay-card h2 {
+        margin-top: 0;
+        color: #ffd700;
+      }
+      .score-line {
+        font-size: 1rem;
+        margin: 0.6rem 0;
+      }
+      .upgrade-buttons {
+        margin-top: 1.2rem;
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+      }
+      .upgrade-buttons button {
+        flex: 1;
+        min-width: 140px;
+        border-width: 2px;
+      }
+      .toast {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        padding: 0.6rem 1rem;
+        background: rgba(27, 26, 32, 0.95);
+        border: 1px solid #ffd700;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="game-wrapper">
+      <h1>Time Loop Runner</h1>
+      <p class="subtitle">Collect coins, dodge glitches, repeat the loop.</p>
+      <div id="hud">
+        <div id="scoreboard">
+          Loop 1 / 3 · Coins: 0 · Total: 0 · Best: 0.0s
+        </div>
+        <button id="shareBtn">Share</button>
+      </div>
+      <canvas id="gameCanvas" width="600" height="400"></canvas>
+    </div>
+
+    <div id="scoreOverlay" class="overlay">
+      <div class="overlay-card">
+        <h2>Time-Loop Score Card</h2>
+        <p class="score-line" id="scoreLine">🔥 0 Coins | 🚀 100% Speed | 🎯 Best Run: 0.0s</p>
+        <div class="upgrade-section">
+          <p>Choose an upgrade to bend the next loop:</p>
+          <div class="upgrade-buttons">
+            <button id="speedUpgrade">+10% Speed</button>
+            <button id="coinUpgrade">+20% Coin Size</button>
+          </div>
+        </div>
+        <div style="margin-top: 1rem; display: flex; gap: 0.6rem">
+          <button id="overlayShare">Copy Score</button>
+          <button id="continueBtn">Continue Run</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast">Copied!</div>
+
+    <script>
+      (function () {
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreboard = document.getElementById("scoreboard");
+        const shareBtn = document.getElementById("shareBtn");
+        const overlay = document.getElementById("scoreOverlay");
+        const scoreLine = document.getElementById("scoreLine");
+        const continueBtn = document.getElementById("continueBtn");
+        const overlayShare = document.getElementById("overlayShare");
+        const speedUpgradeBtn = document.getElementById("speedUpgrade");
+        const coinUpgradeBtn = document.getElementById("coinUpgrade");
+        const toast = document.getElementById("toast");
+
+        const STORAGE_KEY = "timeLoopRunnerState";
+        const LOOP_DURATION = 5000; // ms
+        const PLAYER_RADIUS = 50;
+        const PLAYER_BASE_SPEED = 220; // px per second
+        const FALL_BASE_SPEED = 85; // px per second
+        const COIN_RADIUS = 10;
+        const COIN_INTERVAL = 1500;
+        const OBSTACLE_INTERVAL = 2000;
+
+        const saveDefaults = {
+          totalCoins: 0,
+          bestTime: 0,
+          upgrades: { speed: 0, coinSize: 0 },
+          loopsCompleted: 0,
+        };
+
+        function loadState() {
+          try {
+            const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            if (stored && typeof stored === "object") {
+              return { ...saveDefaults, ...stored };
+            }
+          } catch (err) {
+            console.warn("Failed to parse local storage state.", err);
+          }
+          return { ...saveDefaults };
+        }
+
+        function persistState() {
+          localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({
+              totalCoins: state.totalCoins,
+              bestTime: state.bestTime,
+              upgrades: state.upgrades,
+              loopsCompleted: state.completedLoopsTotal,
+            })
+          );
+        }
+
+        const stored = loadState();
+
+        const state = {
+          player: {
+            x: canvas.width / 2,
+            y: canvas.height - PLAYER_RADIUS - 10,
+          },
+          keys: { left: false, right: false },
+          coins: [],
+          obstacles: [],
+          coinsThisLoop: 0,
+          totalCoins: stored.totalCoins,
+          completedLoops: 0,
+          completedLoopsTotal: stored.loopsCompleted,
+          bestTime: stored.bestTime,
+          upgrades: { ...saveDefaults.upgrades, ...stored.upgrades },
+          loopStartTime: performance.now(),
+          lastCoinSpawn: 0,
+          lastObstacleSpawn: 0,
+          active: true,
+          upgradePending: false,
+        };
+        let previousTimestamp = performance.now();
+
+        function getSpeedMultiplier() {
+          return 1 + state.upgrades.speed * 0.1;
+        }
+
+        function getCoinRadius() {
+          return COIN_RADIUS * (1 + state.upgrades.coinSize * 0.2);
+        }
+
+        function showToast(message) {
+          toast.textContent = message;
+          toast.classList.add("show");
+          setTimeout(() => toast.classList.remove("show"), 1400);
+        }
+
+        function formatScoreLine() {
+          const speedPercent = Math.round(getSpeedMultiplier() * 100);
+          return `🔥 ${state.totalCoins} Coins | 🚀 ${speedPercent}% Speed | 🎯 Best Run: ${state.bestTime.toFixed(
+            1
+          )}s`;
+        }
+
+        function updateScoreboard() {
+          scoreboard.textContent = `Loop ${state.completedLoops + 1} / 3 · Coins: ${
+            state.coinsThisLoop
+          } · Total: ${state.totalCoins} · Best: ${state.bestTime.toFixed(1)}s`;
+        }
+
+        function resetLoop(hardReset = false) {
+          state.coins = [];
+          state.obstacles = [];
+          state.coinsThisLoop = hardReset ? 0 : state.coinsThisLoop;
+          state.player.x = canvas.width / 2;
+          state.loopStartTime = performance.now();
+          state.lastCoinSpawn = 0;
+          state.lastObstacleSpawn = 0;
+        }
+
+        function completeLoop() {
+          const elapsed = (performance.now() - state.loopStartTime) / 1000;
+          state.bestTime = Math.max(state.bestTime, elapsed);
+          state.completedLoops += 1;
+          state.completedLoopsTotal += 1;
+          state.coinsThisLoop = 0;
+          persistState();
+          resetLoop(true);
+
+          if (state.completedLoops >= 3) {
+            state.completedLoops = 0;
+            triggerScoreCard();
+          }
+          updateScoreboard();
+        }
+
+        function failLoop() {
+          const elapsed = (performance.now() - state.loopStartTime) / 1000;
+          state.bestTime = Math.max(state.bestTime, elapsed);
+          persistState();
+          state.coinsThisLoop = 0;
+          resetLoop(true);
+          updateScoreboard();
+        }
+
+        function spawnCoin(timestamp) {
+          state.coins.push({
+            x: Math.random() * (canvas.width - 40) + 20,
+            y: -20,
+            radius: getCoinRadius(),
+            speed: 1.2,
+          });
+          state.lastCoinSpawn = timestamp;
+        }
+
+        function spawnObstacle(timestamp) {
+          const size = 30;
+          state.obstacles.push({
+            x: Math.random() * (canvas.width - size),
+            y: -size,
+            size,
+            speed: 1.8,
+          });
+          state.lastObstacleSpawn = timestamp;
+        }
+
+        function movePlayer(deltaMs) {
+          const travel =
+            ((PLAYER_BASE_SPEED * getSpeedMultiplier()) * deltaMs) / 1000;
+          if (state.keys.left) {
+            state.player.x -= travel;
+          }
+          if (state.keys.right) {
+            state.player.x += travel;
+          }
+          const minX = PLAYER_RADIUS;
+          const maxX = canvas.width - PLAYER_RADIUS;
+          state.player.x = Math.max(minX, Math.min(maxX, state.player.x));
+        }
+
+        function updateEntities(deltaMs) {
+          const fallDistance = (FALL_BASE_SPEED * deltaMs) / 1000;
+          state.coins.forEach((coin) => {
+            coin.y += fallDistance * coin.speed;
+          });
+          state.obstacles.forEach((obs) => {
+            obs.y += fallDistance * obs.speed * 1.3;
+          });
+
+          state.coins = state.coins.filter((coin) => {
+            const dx = coin.x - state.player.x;
+            const dy = coin.y - state.player.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < coin.radius + PLAYER_RADIUS) {
+              state.coinsThisLoop += 1;
+              state.totalCoins += 1;
+              persistState();
+              updateScoreboard();
+              return false;
+            }
+            return coin.y < canvas.height + coin.radius;
+          });
+
+          state.obstacles = state.obstacles.filter((obs) => {
+            const closestX = Math.max(
+              obs.x,
+              Math.min(state.player.x, obs.x + obs.size)
+            );
+            const closestY = Math.max(
+              obs.y,
+              Math.min(state.player.y, obs.y + obs.size)
+            );
+            const dx = state.player.x - closestX;
+            const dy = state.player.y - closestY;
+            const collision = dx * dx + dy * dy < PLAYER_RADIUS * PLAYER_RADIUS;
+            if (collision) {
+              failLoop();
+              return false;
+            }
+            return obs.y < canvas.height + obs.size;
+          });
+        }
+
+        function drawPlayer() {
+          ctx.beginPath();
+          ctx.arc(state.player.x, state.player.y, PLAYER_RADIUS, 0, Math.PI * 2);
+          ctx.fillStyle = "#3498db";
+          ctx.fill();
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = "rgba(255,255,255,0.4)";
+          ctx.stroke();
+        }
+
+        function drawCoins() {
+          ctx.fillStyle = "#ffd700";
+          state.coins.forEach((coin) => {
+            ctx.beginPath();
+            ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        }
+
+        function drawObstacles() {
+          ctx.fillStyle = "#ff4136";
+          state.obstacles.forEach((obs) => {
+            ctx.fillRect(obs.x, obs.y, obs.size, obs.size);
+          });
+        }
+
+        function drawProgress(timestamp) {
+          const elapsed = timestamp - state.loopStartTime;
+          const progress = Math.min(elapsed / LOOP_DURATION, 1);
+          ctx.fillStyle = "rgba(255,255,255,0.1)";
+          ctx.fillRect(0, 0, canvas.width, 6);
+          ctx.fillStyle = "#ffd700";
+          ctx.fillRect(0, 0, canvas.width * progress, 6);
+          if (progress >= 1) {
+            completeLoop();
+          }
+        }
+
+        function triggerScoreCard() {
+          state.active = false;
+          state.upgradePending = true;
+          scoreLine.textContent = formatScoreLine();
+          overlay.classList.add("active");
+        }
+
+        function applyUpgrade(type) {
+          if (!state.upgradePending) return;
+          if (type === "speed") {
+            state.upgrades.speed += 1;
+          } else if (type === "coin") {
+            state.upgrades.coinSize += 1;
+          }
+          state.upgradePending = false;
+          persistState();
+          hideOverlay();
+        }
+
+        function hideOverlay() {
+          overlay.classList.remove("active");
+          setTimeout(() => {
+            state.active = true;
+            state.loopStartTime = performance.now();
+          }, 200);
+        }
+
+        function copyScoreCard() {
+          const text = formatScoreLine();
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard
+              .writeText(text)
+              .then(() => showToast("Score copied!"))
+              .catch(() => showToast("Clipboard blocked"));
+          } else {
+            const temp = document.createElement("textarea");
+            temp.value = text;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand("copy");
+            document.body.removeChild(temp);
+            showToast("Score copied!");
+          }
+        }
+
+        function gameLoop(timestamp) {
+          const delta = Math.min(timestamp - previousTimestamp, 32);
+          previousTimestamp = timestamp;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          if (state.active) {
+            if (!state.lastCoinSpawn) state.lastCoinSpawn = timestamp;
+            if (!state.lastObstacleSpawn) state.lastObstacleSpawn = timestamp;
+            if (timestamp - state.lastCoinSpawn >= COIN_INTERVAL) {
+              spawnCoin(timestamp);
+            }
+            if (timestamp - state.lastObstacleSpawn >= OBSTACLE_INTERVAL) {
+              spawnObstacle(timestamp);
+            }
+            movePlayer(delta);
+            updateEntities(delta);
+            drawProgress(timestamp);
+          } else {
+            ctx.fillStyle = "rgba(0,0,0,0.35)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            previousTimestamp = timestamp;
+          }
+          drawCoins();
+          drawObstacles();
+          drawPlayer();
+          requestAnimationFrame(gameLoop);
+        }
+
+        updateScoreboard();
+        requestAnimationFrame(gameLoop);
+
+        document.addEventListener("keydown", (event) => {
+          if (event.code === "ArrowLeft") state.keys.left = true;
+          if (event.code === "ArrowRight") state.keys.right = true;
+        });
+        document.addEventListener("keyup", (event) => {
+          if (event.code === "ArrowLeft") state.keys.left = false;
+          if (event.code === "ArrowRight") state.keys.right = false;
+        });
+
+        shareBtn.addEventListener("click", copyScoreCard);
+        overlayShare.addEventListener("click", copyScoreCard);
+        continueBtn.addEventListener("click", () => {
+          if (state.upgradePending) return;
+          hideOverlay();
+        });
+        speedUpgradeBtn.addEventListener("click", () => applyUpgrade("speed"));
+        coinUpgradeBtn.addEventListener("click", () => applyUpgrade("coin"));
+      })();
+    </script>
+  </body>
+</html>
