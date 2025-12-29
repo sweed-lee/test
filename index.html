@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quantum Clicker</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>Quantum Clicker</h1>
+      <p class="subtitle">Harness superposition, collapse the wave, grow your qubits.</p>
+    </div>
+    <div class="stats">
+      <div class="stat">
+        <span class="label">Qubits</span>
+        <span id="qubit-count" class="value">0</span>
+      </div>
+      <div class="stat">
+        <span class="label">QPS</span>
+        <span id="qps-count" class="value">0</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="experiment-panel">
+      <canvas id="experiment-canvas" width="720" height="360" aria-label="Double slit experiment"></canvas>
+      <div class="experiment-controls">
+        <button id="emit-button" class="primary">Emit Photon</button>
+        <div class="toggle-group" role="group" aria-label="Observer position">
+          <button data-observer="none" class="toggle active">No Observer</button>
+          <button data-observer="left" class="toggle">Observer Left</button>
+          <button data-observer="right" class="toggle">Observer Right</button>
+        </div>
+      </div>
+      <div class="tips" id="tip-box">
+        Click on the canvas or use the button to emit photons. Observers collapse the wave early, steering the probability cloud.
+      </div>
+    </section>
+
+    <aside class="upgrade-panel">
+      <h2>Upgrades</h2>
+      <div id="upgrade-container" class="upgrade-grid"></div>
+    </aside>
+  </main>
+
+  <footer class="app-footer">
+    <span>Local save enabled • Minimalist canvas simulation • No external libraries</span>
+    <button id="reset-button" class="ghost">Reset Save</button>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
