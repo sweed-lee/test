@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quantum Merge 2048: MVP Edition</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      background: #f2f3f7;
+      color: #2b2b2b;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    #gameContainer {
+      background: #ffffff;
+      padding: 16px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    #scorePanel {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    #scorePanel span {
+      min-width: 120px;
+      display: inline-block;
+    }
+
+    canvas {
+      display: block;
+      background: #bbada0;
+      border-radius: 12px;
+    }
+
+    #instructions {
+      max-width: 560px;
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>Quantum Merge 2048: MVP Edition</h1>
+  <div id="gameContainer">
+    <div id="scorePanel">
+      <span>Score: <strong id="score">0</strong></span>
+      <span>High Score: <strong id="highScore">0</strong></span>
+    </div>
+    <canvas id="gameCanvas" width="500" height="500"></canvas>
+  </div>
+  <div id="instructions">
+    Arrow Keys: Move | C: Toggle Observer Mode (use arrows to select, press C again to collapse) | Space: Restart
+  </div>
+
+  <script>
+    class QuantumGame {
+      constructor() {
+        this.grid = [];
+        this.score = 0;
+        this.highScore = Number(localStorage.getItem("quantumMergeHighScore")) || 0;
+        this.gameOver = false;
+        this.won = false;
+      }
+
+      startNewGame() {
+        this.grid = Array.from({ length: 4 }, () => Array(4).fill(null));
+        this.score = 0;
+        this.gameOver = false;
+        this.won = false;
+        this.spawnTile();
+        this.spawnTile();
+      }
+
+      spawnTile() {
+        const empty = [];
+        for (let row = 0; row < 4; row += 1) {
+          for (let col = 0; col < 4; col += 1) {
+            if (!this.grid[row][col]) {
+              empty.push({ row, col });
+            }
+          }
+        }
+        if (empty.length === 0) return;
+        const spot = empty[Math.floor(Math.random() * empty.length)];
+        const options = Math.random() < 0.7 ? [2, 4] : [4, 8];
+        this.grid[spot.row][spot.col] = {
+          values: options,
+          collapsed: false,
+        };
+      }
+
+      collapseTile(row, col) {
+        const tile = this.grid[row][col];
+        if (!tile) return;
+        const choice = tile.values[Math.floor(Math.random() * tile.values.length)];
+        tile.values = [choice, choice];
+        tile.collapsed = true;
+      }
+
+      move(direction) {
+        if (this.gameOver || this.won) return false;
+        let moved = false;
+        const moveLine = (line) => {
+          const compact = line.filter(Boolean);
+          const result = [];
+          let skip = false;
+          for (let i = 0; i < compact.length; i += 1) {
+            if (skip) {
+              skip = false;
+              continue;
+            }
+            const current = compact[i];
+            const next = compact[i + 1];
+            if (next && this.canMerge(current, next)) {
+              const merged = this.mergeTiles(current, next);
+              result.push(merged);
+              skip = true;
+              moved = true;
+            } else {
+              result.push(current);
+            }
+          }
+          while (result.length < 4) {
+            result.push(null);
+          }
+          if (!moved) {
+            for (let i = 0; i < 4; i += 1) {
+              if (line[i] !== result[i]) {
+                moved = true;
+                break;
+              }
+            }
+          }
+          return result;
+        };
+
+        const getLine = (index) => {
+          const line = [];
+          for (let i = 0; i < 4; i += 1) {
+            if (direction === "left") line.push(this.grid[index][i]);
+            if (direction === "right") line.push(this.grid[index][3 - i]);
+            if (direction === "up") line.push(this.grid[i][index]);
+            if (direction === "down") line.push(this.grid[3 - i][index]);
+          }
+          return line;
+        };
+
+        const setLine = (index, line) => {
+          for (let i = 0; i < 4; i += 1) {
+            if (direction === "left") this.grid[index][i] = line[i];
+            if (direction === "right") this.grid[index][3 - i] = line[i];
+            if (direction === "up") this.grid[i][index] = line[i];
+            if (direction === "down") this.grid[3 - i][index] = line[i];
+          }
+        };
+
+        for (let i = 0; i < 4; i += 1) {
+          const line = getLine(i);
+          const newLine = moveLine(line);
+          setLine(i, newLine);
+        }
+
+        if (moved) {
+          this.spawnTile();
+          this.checkGameState();
+        }
+        return moved;
+      }
+
+      canMerge(tileA, tileB) {
+        const valuesA = tileA.values;
+        const valuesB = tileB.values;
+        return valuesA.some((value) => valuesB.includes(value));
+      }
+
+      mergeTiles(tileA, tileB) {
+        const shared = tileA.values.filter((value) => tileB.values.includes(value));
+        const unique = Array.from(new Set(shared));
+        const mergedValues = unique.map((value) => value * 2);
+        let values = mergedValues;
+        if (values.length === 1) {
+          values = [values[0], values[0]];
+        } else if (values.length > 2) {
+          values = [values[0], values[values.length - 1]];
+        }
+        const maxValue = Math.max(...values);
+        this.score += maxValue;
+        return {
+          values,
+          collapsed: values[0] === values[1],
+        };
+      }
+
+      checkGameState() {
+        let hasMoves = false;
+        let highest = 0;
+        for (let row = 0; row < 4; row += 1) {
+          for (let col = 0; col < 4; col += 1) {
+            const tile = this.grid[row][col];
+            if (tile) {
+              highest = Math.max(highest, ...tile.values);
+              const neighbors = [
+                [row + 1, col],
+                [row - 1, col],
+                [row, col + 1],
+                [row, col - 1],
+              ];
+              for (const [r, c] of neighbors) {
+                if (r < 0 || r > 3 || c < 0 || c > 3) continue;
+                const other = this.grid[r][c];
+                if (!other || this.canMerge(tile, other)) {
+                  hasMoves = true;
+                }
+              }
+            } else {
+              hasMoves = true;
+            }
+          }
+        }
+        if (highest >= 2048) {
+          this.won = true;
+        }
+        if (!hasMoves) {
+          this.gameOver = true;
+        }
+      }
+    }
+
+    class GameRenderer {
+      constructor(canvasElement, gameInstance) {
+        this.canvas = canvasElement;
+        this.ctx = canvasElement.getContext("2d");
+        this.game = gameInstance;
+        this.tileColors = {
+          2: "#eee4da",
+          4: "#ede0c8",
+          8: "#f2b179",
+          16: "#f59563",
+          32: "#f67c5f",
+          64: "#f65e3b",
+          128: "#edcf72",
+          256: "#edcc61",
+          512: "#edc850",
+          1024: "#edc53f",
+          2048: "#edc22e",
+        };
+      }
+
+      draw(selectedTile) {
+        const { ctx, canvas } = this;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const padding = 16;
+        const tileSize = (canvas.width - padding * 5) / 4;
+        ctx.fillStyle = "#bbada0";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        for (let row = 0; row < 4; row += 1) {
+          for (let col = 0; col < 4; col += 1) {
+            const x = padding + col * (tileSize + padding);
+            const y = padding + row * (tileSize + padding);
+            ctx.fillStyle = "#cdc1b4";
+            ctx.fillRect(x, y, tileSize, tileSize);
+            const tile = this.game.grid[row][col];
+            if (tile) {
+              this.drawTile(row, col, tile, tileSize, padding);
+            }
+            if (selectedTile && selectedTile.row === row && selectedTile.col === col) {
+              ctx.strokeStyle = "#2f80ed";
+              ctx.lineWidth = 4;
+              ctx.strokeRect(x + 2, y + 2, tileSize - 4, tileSize - 4);
+            }
+          }
+        }
+
+        this.drawMessageOverlay();
+      }
+
+      drawTile(row, col, tile, tileSize, padding) {
+        const x = padding + col * (tileSize + padding);
+        const y = padding + row * (tileSize + padding);
+        const displayValue = tile.values[0] === tile.values[1]
+          ? `${tile.values[0]}`
+          : `${tile.values[0]}|${tile.values[1]}`;
+        const baseValue = Math.max(...tile.values);
+        this.ctx.fillStyle = this.tileColors[baseValue] || "#3c3a32";
+        this.ctx.fillRect(x, y, tileSize, tileSize);
+
+        this.ctx.fillStyle = baseValue <= 4 ? "#776e65" : "#f9f6f2";
+        this.ctx.font = "bold 24px Arial";
+        this.ctx.textAlign = "center";
+        this.ctx.textBaseline = "middle";
+        this.ctx.fillText(displayValue, x + tileSize / 2, y + tileSize / 2);
+      }
+
+      drawMessageOverlay() {
+        if (!this.game.gameOver && !this.game.won) return;
+        const { ctx, canvas } = this;
+        ctx.fillStyle = "rgba(255, 255, 255, 0.82)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#2b2b2b";
+        ctx.font = "bold 32px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(this.game.won ? "You Win!" : "Game Over", canvas.width / 2, canvas.height / 2 - 10);
+        ctx.font = "16px Arial";
+        ctx.fillText("Press Space to restart", canvas.width / 2, canvas.height / 2 + 20);
+      }
+    }
+
+    class GameManager {
+      constructor(gameInstance, rendererInstance) {
+        this.game = gameInstance;
+        this.renderer = rendererInstance;
+        this.observerMode = false;
+        this.selectedTile = null;
+      }
+
+      setupInput() {
+        window.addEventListener("keydown", (event) => this.handleKeyDown(event));
+      }
+
+      handleKeyDown(event) {
+        const key = event.key.toLowerCase();
+        if (key === " ") {
+          this.restartGame();
+          return;
+        }
+
+        if (key === "c") {
+          this.toggleObserverMode();
+          return;
+        }
+
+        if (this.observerMode) {
+          this.moveSelection(event.key);
+          return;
+        }
+
+        if (["arrowup", "arrowdown", "arrowleft", "arrowright"].includes(key)) {
+          event.preventDefault();
+          const direction = key.replace("arrow", "");
+          this.processMove(direction);
+        }
+      }
+
+      moveSelection(key) {
+        if (!this.selectedTile) {
+          this.selectedTile = this.findFirstTile();
+          return;
+        }
+        const deltaMap = {
+          ArrowUp: [-1, 0],
+          ArrowDown: [1, 0],
+          ArrowLeft: [0, -1],
+          ArrowRight: [0, 1],
+        };
+        const delta = deltaMap[key];
+        if (!delta) return;
+        let { row, col } = this.selectedTile;
+        for (let i = 0; i < 4; i += 1) {
+          row = (row + delta[0] + 4) % 4;
+          col = (col + delta[1] + 4) % 4;
+          if (this.game.grid[row][col]) {
+            this.selectedTile = { row, col };
+            return;
+          }
+        }
+      }
+
+      findFirstTile() {
+        for (let row = 0; row < 4; row += 1) {
+          for (let col = 0; col < 4; col += 1) {
+            if (this.game.grid[row][col]) {
+              return { row, col };
+            }
+          }
+        }
+        return null;
+      }
+
+      processMove(direction) {
+        const moved = this.game.move(direction);
+        if (moved) {
+          this.updateScores();
+        }
+      }
+
+      toggleObserverMode() {
+        if (this.observerMode && this.selectedTile) {
+          this.game.collapseTile(this.selectedTile.row, this.selectedTile.col);
+          this.observerMode = false;
+          this.selectedTile = null;
+          this.game.checkGameState();
+          this.updateScores();
+          return;
+        }
+        this.observerMode = !this.observerMode;
+        if (this.observerMode) {
+          this.selectedTile = this.findFirstTile();
+        } else {
+          this.selectedTile = null;
+        }
+      }
+
+      updateScores() {
+        if (this.game.score > this.game.highScore) {
+          this.game.highScore = this.game.score;
+          localStorage.setItem("quantumMergeHighScore", this.game.highScore.toString());
+        }
+        document.getElementById("score").textContent = this.game.score;
+        document.getElementById("highScore").textContent = this.game.highScore;
+      }
+
+      restartGame() {
+        this.game.startNewGame();
+        this.observerMode = false;
+        this.selectedTile = null;
+        this.updateScores();
+      }
+    }
+
+    function bootstrapGame() {
+      const canvas = document.getElementById("gameCanvas");
+      const game = new QuantumGame();
+      const renderer = new GameRenderer(canvas, game);
+      const manager = new GameManager(game, renderer);
+
+      game.startNewGame();
+      manager.updateScores();
+      manager.setupInput();
+
+      const renderLoop = () => {
+        renderer.draw(manager.selectedTile);
+        requestAnimationFrame(renderLoop);
+      };
+      renderLoop();
+    }
+
+    bootstrapGame();
+  </script>
+</body>
+</html>
