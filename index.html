@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mote: Creator SEED</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="title-wrap">
+        <h1>Mote: Creator SEED</h1>
+        <p>Guide the Mote indirectly. Place light. It flees to darkness.</p>
+      </div>
+      <div class="controls">
+        <label>
+          Seed
+          <input id="seedInput" type="text" inputmode="numeric" placeholder="e.g. 424242 or 99..." />
+        </label>
+        <label>
+          Complexity
+          <select id="complexitySelect">
+            <option value="1">1 - Easy</option>
+            <option value="2">2</option>
+            <option value="3" selected>3 - Normal</option>
+            <option value="4">4</option>
+            <option value="5">5 - Hard</option>
+          </select>
+        </label>
+        <button id="loadSeedBtn">Load Seed</button>
+        <button id="randomSeedBtn">Random Seed</button>
+        <button id="resetBtn">Reset</button>
+        <button id="editModeBtn" class="secondary">Enter Edit Mode</button>
+      </div>
+    </header>
+
+    <section class="status">
+      <div><strong>Level:</strong> <span id="currentLevelLabel">-</span></div>
+      <div><strong>Difficulty:</strong> <span id="difficultyLabel">-</span></div>
+      <div><strong>Lights:</strong> <span id="lightsLabel">0 / 0</span></div>
+      <div><strong>Moves:</strong> <span id="movesLabel">0</span></div>
+      <div><strong>Best:</strong> <span id="bestLabel">-</span></div>
+    </section>
+
+    <section class="board-wrap">
+      <canvas id="gameCanvas" width="640" height="480" aria-label="Mote game board"></canvas>
+      <aside class="sidepanel">
+        <section class="panel">
+          <h2>Progression</h2>
+          <div class="row">
+            <select id="levelSelect"></select>
+            <button id="loadSelectedLevelBtn">Load</button>
+          </div>
+          <p class="hint">Tutorial levels unlock first, then generated challenges.</p>
+        </section>
+
+        <section class="panel editor-panel hidden" id="editorPanel">
+          <h2>Puzzle Editor</h2>
+          <div class="tool-row">
+            <button class="tool-btn active" data-tool="wall">Wall</button>
+            <button class="tool-btn" data-tool="erase">Erase</button>
+            <button class="tool-btn" data-tool="start">Start</button>
+            <button class="tool-btn" data-tool="goal">Goal</button>
+          </div>
+          <div class="row">
+            <button id="clearInteriorBtn">Clear Interior</button>
+            <button id="saveSeedBtn">Save Current As Seed</button>
+          </div>
+          <p class="hint">Click tiles on the board to edit. Exit edit mode to play.</p>
+        </section>
+
+        <section class="panel">
+          <h2>Seed Hub</h2>
+          <ul id="seedHubList" class="seed-list"></ul>
+          <p class="hint">Saved seeds are local and shareable as numbers.</p>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <div id="victoryOverlay" class="overlay hidden" role="dialog" aria-modal="true">
+    <div class="overlay-card">
+      <h2>Goal Reached</h2>
+      <p id="victoryText"></p>
+      <div class="row">
+        <button id="nextLevelBtn">Next Level</button>
+        <button id="closeVictoryBtn" class="secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js" defer></script>
+</body>
+</html>
