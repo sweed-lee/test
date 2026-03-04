@@ -1,0 +1,43 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #0f1117;
+  color: #e8ecf3;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 16px 12px 24px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  letter-spacing: 0.03em;
+}
+
+.subtitle {
+  margin: 0 0 8px;
+  color: #9aa4b7;
+  font-size: 0.95rem;
+}
+
+canvas {
+  border: 1px solid #2b3142;
+  border-radius: 8px;
+  background: #151a25;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  max-width: min(960px, 95vw);
+  height: auto;
+}
