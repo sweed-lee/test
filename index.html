@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Laser Logic</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <h1>Laser Logic</h1>
+      <p class="subtitle">Bend light, mix colors, solve tactical beam puzzles.</p>
+    </header>
+
+    <main class="app-content">
+      <aside class="control-panel">
+        <section class="panel-group">
+          <label for="levelSelect">Level</label>
+          <select id="levelSelect" aria-label="Level selector"></select>
+          <h2 id="levelTitle">Level</h2>
+          <p id="levelDescription" class="level-description"></p>
+        </section>
+
+        <section class="panel-group stats-grid">
+          <div class="stat">
+            <span class="stat-label">Moves</span>
+            <span id="moveCounter" class="stat-value">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Par</span>
+            <span id="parCounter" class="stat-value">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Stars</span>
+            <span id="starCounter" class="stat-value">0</span>
+          </div>
+        </section>
+
+        <section class="panel-group">
+          <h3>Targets</h3>
+          <ul id="targetList" class="target-list"></ul>
+        </section>
+
+        <section class="panel-group">
+          <h3>Toolbox</h3>
+          <div id="toolbar" class="toolbar"></div>
+          <p id="toolHint" class="hint">
+            Left click to place/select. Click a placed part again or right click to rotate.
+          </p>
+        </section>
+
+        <section class="panel-group button-row">
+          <button id="prevButton" type="button">Prev</button>
+          <button id="resetButton" type="button">Reset</button>
+          <button id="nextButton" type="button">Next</button>
+        </section>
+
+        <section class="panel-group">
+          <p id="statusText" class="status-text">Route the beam to every target with exact color matching.</p>
+        </section>
+      </aside>
+
+      <section class="canvas-panel">
+        <canvas id="gameCanvas" width="980" height="700" aria-label="Laser Logic game board"></canvas>
+        <div id="winBanner" class="win-banner hidden">Puzzle solved! Use Next to continue.</div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
