@@ -3,6 +3,12 @@ const ctx = canvas.getContext("2d");
 const hud = document.getElementById("hud");
 const rosterBox = document.getElementById("roster");
 
+const spriteConfig = { A:'assets/p1.svg', B:'assets/p2.svg' };
+const spriteImages = { A:new Image(), B:new Image() };
+spriteImages.A.src = spriteConfig.A;
+spriteImages.B.src = spriteConfig.B;
+
+
 const roles = [
   { name:"陈弘毅", rarity:"legend", hp:500, speed:8, color:"#ffcf5a", atkCd:0.9, atk:26, s1:"装备大师", s2:"超远扣杀", desc:"冲撞型。S1自强化(20%概率50%减伤/80%概率伤害+35%，持续10s)，S2远程重击并短晕。", debuff:"知识伤害翻倍"},
   { name:"李语晨", rarity:"treasure", hp:400, speed:6, color:"#6ef7ff", atkCd:0.45, atk:8, s1:"欧巴魅力", s2:"化学炸弹", desc:"高攻速毒伤。S1减伤，S2投掷毒云。", debuff:"连续移动10s后减速2s"},
@@ -90,7 +96,7 @@ function tick(now){ const dt=Math.min(0.033,(now-last)/1000); last=now;
  }
  draw(); requestAnimationFrame(tick);
 }
-function drawPlayer(p,color){ const s=worldToScreen(p.x,p.y); const px=14; ctx.fillStyle=color; ctx.fillRect(s.x-px,s.y-px,px*2,px*2); if(p.inv>0){ctx.strokeStyle='#fff';ctx.strokeRect(s.x-px-2,s.y-px-2,px*2+4,px*2+4);} if(p.shield>0){ctx.strokeStyle='#8be9ff';ctx.strokeRect(s.x-px-6,s.y-px-6,px*2+12,px*2+12);} ctx.fillStyle="#111"; ctx.fillRect(s.x-4,s.y-3,3,3); ctx.fillRect(s.x+1,s.y-3,3,3); if(p.stun>0){ctx.fillStyle='#fff';ctx.fillText('晕',s.x-4,s.y-18);} }
+function drawPlayer(p,color){ const s=worldToScreen(p.x,p.y); const px=14; const key = p===A ? 'A' : 'B'; const img=spriteImages[key]; if(img && img.complete){ ctx.drawImage(img, s.x-px, s.y-px, px*2, px*2);} else { ctx.fillStyle=color; ctx.fillRect(s.x-px,s.y-px,px*2,px*2);} if(p.inv>0){ctx.strokeStyle='#fff';ctx.strokeRect(s.x-px-2,s.y-px-2,px*2+4,px*2+4);} if(p.shield>0){ctx.strokeStyle='#8be9ff';ctx.strokeRect(s.x-px-6,s.y-px-6,px*2+12,px*2+12);} if(p.stun>0){ctx.fillStyle='#fff';ctx.fillText('晕',s.x-4,s.y-18);} }
 function drawEffects(){ effects.forEach(e=>{ if(e.type==='pulse'){const s=worldToScreen(e.x,e.y); const a=e.t/e.maxT; ctx.beginPath(); ctx.strokeStyle=`${e.color}${Math.floor(a*255).toString(16).padStart(2,'0')}`; ctx.lineWidth=3; ctx.arc(s.x,s.y,(1-a)*e.r/50*canvas.width,0,Math.PI*2); ctx.stroke();}
   else if(e.type==='spark'){const s=worldToScreen(e.x,e.y); ctx.fillStyle=e.color; ctx.fillRect(s.x,s.y,3,3);} else if(e.type==='slash'){const s1=worldToScreen(e.x1,e.y1),s2=worldToScreen(e.x2,e.y2); ctx.strokeStyle=e.color; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(s1.x,s1.y); ctx.lineTo(s2.x,s2.y); ctx.stroke(); }});
 }
