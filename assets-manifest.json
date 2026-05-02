@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "updated_at": "2026-05-02",
+  "sprites": {
+    "player1": {
+      "file": "assets/p1.svg",
+      "frame": {"w": 32, "h": 32},
+      "states": {"idle": [0,1,2,3], "walk": [4,5,6,7]}
+    },
+    "player2": {
+      "file": "assets/p2.svg",
+      "frame": {"w": 32, "h": 32},
+      "states": {"idle": [0,1,2,3], "walk": [4,5,6,7]}
+    }
+  },
+  "download_sources": [
+    "https://pipoya.itch.io/",
+    "https://opengameart.org/content/rpg-character-sprites",
+    "https://itch.io/game-assets/free/tag-anime/tag-sprites/tag-spritesheet"
+  ]
+}

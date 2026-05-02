@@ -1,0 +1,48 @@
+{
+  "updated_at": "2026-05-02",
+  "style": ["anime", "pixel"],
+  "character_assets": [
+    {
+      "name": "PIPOYA Free Assets",
+      "url": "https://pipoya.itch.io/",
+      "type": ["character", "monster", "vfx"],
+      "notes": "Contains multiple FREE packs with RPG-friendly spritesheets.",
+      "license_check_required": true
+    },
+    {
+      "name": "2D Pixel Male/Female Character",
+      "url": "https://gandalfhardcore.itch.io/2d-pixel-art-male-and-female-character",
+      "type": ["character", "animation"],
+      "animations": ["idle", "walk", "run", "jump", "fall", "attack", "death"],
+      "notes": "Name-your-price asset (can be free).",
+      "license_check_required": true
+    },
+    {
+      "name": "OpenGameArt RPG Character Sprites",
+      "url": "https://opengameart.org/content/rpg-character-sprites",
+      "type": ["character"],
+      "notes": "Check individual page licenses (CC0/OGA-BY variants).",
+      "license_check_required": true
+    }
+  ],
+  "anime_pixel_entries": [
+    {
+      "name": "itch.io anime spritesheet free tag page",
+      "url": "https://itch.io/game-assets/free/tag-anime/tag-sprites/tag-spritesheet"
+    },
+    {
+      "name": "Schoolgirls Anime Pixel Sprite Pack",
+      "url": "https://free-game-assets.itch.io/free-schoolgirls-anime-character-pixel-sprite-pack"
+    }
+  ],
+  "integration_minimum": {
+    "recommended_sprite_sizes": [32, 48],
+    "required_states": ["idle", "walk", "attack", "hurt", "death"],
+    "checklist": [
+      "commercial-use",
+      "attribution",
+      "redistribution",
+      "ai-nft-clause"
+    ]
+  }
+}
