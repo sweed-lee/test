@@ -21,75 +21,84 @@ drawRoster();
 const p1 = JSON.parse(JSON.stringify(roles[(Math.random()*roles.length)|0]));
 let p2idx = (Math.random()*roles.length)|0; if (roles[p2idx].name===p1.name) p2idx=(p2idx+1)%roles.length;
 const p2 = JSON.parse(JSON.stringify(roles[p2idx]));
-
-function initPlayer(base, x, controls){ return { ...base, x, y:0, vx:0, vy:0, dir:1, cd:0, s1cd:0, s2cd:0, hpMax:base.hp, stun:0, inv:0, buff:0, shield:0, lock:false, focus:0, poison:0, trail:0, controls, movingT:0, slowT:0 }; }
+function initPlayer(base, x, controls){ return { ...base, x, y:0, vx:0, vy:0, cd:0, s1cd:0, s2cd:0, hpMax:base.hp, stun:0, inv:0, buff:0, shield:0, lock:false, poison:0, trail:0, controls, movingT:0, slowT:0 }; }
 const A = initPlayer(p1, -20, {u:'w',d:'s',l:'a',r:'d',atk:'f',s1:'g',s2:'h'});
 const B = initPlayer(p2, 20, {u:'ArrowUp',d:'ArrowDown',l:'ArrowLeft',r:'ArrowRight',atk:'/',s1:'.',s2:','});
 let over = false; const keys = new Set();
 
+const bullets=[]; const zones=[]; const effects=[]; const banners=[];
 addEventListener('keydown',e=>keys.add(e.key)); addEventListener('keyup',e=>keys.delete(e.key));
-function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
-function dist(a,b){ return Math.hypot(a.x-b.x,a.y-b.y); }
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)); const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const worldToScreen=(x,y)=>({x:(x+25)/50*canvas.width, y:(y+25)/50*canvas.height});
+
+function skillBanner(att, sname){ banners.push({text:`${att.name} · ${sname}`, t:1.1, side:att===A?0:1}); pulse(att,att.color,2.2,0.35); }
+function pulse(p, color, r=1.6, t=0.35){ effects.push({type:'pulse',x:p.x,y:p.y,r,t,maxT:t,color}); }
+function burst(p,color,count=10){ for(let i=0;i<count;i++) effects.push({type:'spark',x:p.x,y:p.y,vx:(Math.random()-0.5)*8,vy:(Math.random()-0.5)*8,t:0.5,maxT:0.5,color}); }
+function slash(a,b,color='#fff'){ effects.push({type:'slash',x1:a.x,y1:a.y,x2:b.x,y2:b.y,t:0.12,maxT:0.12,color}); }
+
 function damage(src,tgt,val,kind='normal'){
   if(tgt.inv>0) return;
-  if(tgt.shield>0){ tgt.shield=0; return; }
+  if(tgt.shield>0){ tgt.shield=0; burst(tgt,'#8be9ff',14); return; }
   let d=val;
   if(tgt.name==='陈弘毅'&&kind==='knowledge') d*=2;
   if(src.name==='郭则名' && tgt.hp-d<=0) d=Math.max(0,tgt.hp-1);
   if(tgt.buff>0 && tgt.name==='李语晨' && kind!=='knowledge') d*=0.5;
   tgt.hp -= d;
+  burst(tgt,kind==='knowledge'?'#ff7ad9':'#ffd36e',8);
 }
-function attack(att, def){ if(att.cd>0||att.stun>0||att.lock) return; if(dist(att,def)>4) return; att.cd=att.atkCd; damage(att,def,att.atk); if(att.name==='李语晨') def.poison=5; }
-function cast1(att,def){ if(att.s1cd>0||att.stun>0) return; att.s1cd=12;
+function attack(att, def){ if(att.cd>0||att.stun>0||att.lock||dist(att,def)>4) return; att.cd=att.atkCd; slash(att,def,att.color); damage(att,def,att.atk); if(att.name==='李语晨') def.poison=5; }
+function cast1(att,def){ if(att.s1cd>0||att.stun>0) return; att.s1cd=12; skillBanner(att,att.s1);
   if(att.name==='王若伊'){ att.buff=6; att.atk=15; }
   else if(att.name==='郭则名'){ att.trail=0.8; for(let i=0;i<4;i++) setTimeout(()=>damage(att,def,15*(i+1)),i*120); }
   else if(att.name==='陶飞杰'){ att.inv=3; att.buff=3; }
   else if(att.name==='陈弘毅'){ att.buff=10; if(Math.random()<0.2) att.inv=10; }
   else if(att.name==='石傲天'){ att.lock=true; setTimeout(()=>{att.lock=false; if(dist(att,def)<18) damage(att,def,70);},1500); }
-  else if(att.name==='万济齐'){ bullets.push({x:att.x,y:att.y,vx:(def.x-att.x)/2,vy:(def.y-att.y)/2,r:0.6,t:5,from:att,bounce:2,dmg:20,kind:'normal'}); }
-  else if(att.name==='顾楚晨'){ const n=(Math.random()*10)|0; damage(att,def,n*5); }
+  else if(att.name==='万济齐'){ bullets.push({x:att.x,y:att.y,vx:(def.x-att.x)/2,vy:(def.y-att.y)/2,t:5,from:att,bounce:2,dmg:20}); }
+  else if(att.name==='顾楚晨'){ damage(att,def,((Math.random()*10)|0)*5); }
   else if(att.name==='李语晨'){ att.inv=3; }
 }
-function cast2(att,def){ if(att.s2cd>0||att.stun>0) return; att.s2cd=16;
-  if(att.name==='王若伊'){ att.lock=true; setTimeout(()=>{att.lock=false; if(dist(att,def)<40) damage(att,def,200);},3000); }
+function cast2(att,def){ if(att.s2cd>0||att.stun>0) return; att.s2cd=16; skillBanner(att,att.s2);
+  if(att.name==='王若伊'){ att.lock=true; pulse(att,'#ff9de6',3,3); setTimeout(()=>{att.lock=false; if(dist(att,def)<40) damage(att,def,200);},3000); }
   else if(att.name==='郭则名'){ att.shield=1; }
-  else if(att.name==='陶飞杰'){ const nerf=Math.random()<0.5?0.7:1; if(dist(att,def)<7) damage(att,def,350*nerf,'knowledge'); }
+  else if(att.name==='陶飞杰'){ const nerf=Math.random()<0.5?0.7:1; pulse(att,'#ff845c',7,0.4); if(dist(att,def)<7) damage(att,def,350*nerf,'knowledge'); }
   else if(att.name==='陈弘毅'){ if(dist(att,def)<22){damage(att,def,120,'knowledge'); def.stun=1.2;} else damage(att,def,25); }
   else if(att.name==='石傲天'){ if(att.hp<100){att.speed=10; if(dist(att,def)<6) damage(att,def,50);} }
   else if(att.name==='万济齐'){ att.buff=10; }
   else if(att.name==='顾楚晨'){ if(att.hp/att.hpMax<0.3) att.hp=clamp(att.hp+80,0,att.hpMax); else att.stun=1; }
   else if(att.name==='李语晨'){ zones.push({x:def.x,y:def.y,r:5,t:5,owner:att}); }
 }
-const bullets=[]; const zones=[];
+
 let last=performance.now();
 function tick(now){ const dt=Math.min(0.033,(now-last)/1000); last=now;
-  if(!over){ [A,B].forEach((p,i)=>{
-    const enemy=i===0?B:A;
-    const c=p.controls; const sp=(p.slowT>0?4:p.speed) + (p.trail>0?3:0);
+  if(!over){ [A,B].forEach((p,i)=>{ const enemy=i===0?B:A; const c=p.controls; const sp=(p.slowT>0?4:p.speed)+(p.trail>0?3:0);
     if(p.stun<=0 && !p.lock){ p.vx=(keys.has(c.r)?1:0)-(keys.has(c.l)?1:0); p.vy=(keys.has(c.d)?1:0)-(keys.has(c.u)?1:0); }
-    const l=Math.hypot(p.vx,p.vy)||1; p.x += (p.vx/l)*sp*dt; p.y += (p.vy/l)*sp*dt;
-    p.x=clamp(p.x,-25,25); p.y=clamp(p.y,-25,25);
-    if(Math.hypot(p.vx,p.vy)>0.1) p.movingT += dt; else p.movingT=0;
-    if(p.name==='李语晨' && p.movingT>10){ p.slowT=2; p.movingT=0; }
+    const l=Math.hypot(p.vx,p.vy)||1; p.x=clamp(p.x+(p.vx/l)*sp*dt,-25,25); p.y=clamp(p.y+(p.vy/l)*sp*dt,-25,25);
+    if(Math.hypot(p.vx,p.vy)>0.1) p.movingT += dt; else p.movingT=0; if(p.name==='李语晨'&&p.movingT>10){p.slowT=2;p.movingT=0;}
     if(keys.has(c.atk)) attack(p,enemy); if(keys.has(c.s1)) cast1(p,enemy); if(keys.has(c.s2)) cast2(p,enemy);
     ["cd","s1cd","s2cd","stun","inv","buff","trail","slowT"].forEach(k=>p[k]=Math.max(0,p[k]-dt));
     if(p.poison>0){ p.hp-=2*dt; p.poison-=dt; }
-    if(p.name==='石傲天' && p.hp<100) p.speed=10;
+    if(p.name==='石傲天'&&p.hp<100) p.speed=10;
   });
   bullets.forEach(b=>{ b.x+=b.vx*dt*4; b.y+=b.vy*dt*4; if(Math.abs(b.x)>25){b.vx*=-1;b.bounce--;} if(Math.abs(b.y)>25){b.vy*=-1;b.bounce--;} [A,B].forEach(p=>{ if(p!==b.from && Math.hypot(p.x-b.x,p.y-b.y)<1.2){ damage(b.from,p,b.from.name==='万济齐'&&b.from.buff>0?b.dmg+40:b.dmg,b.from.buff>0?'knowledge':'normal'); b.t=0; }}); b.t-=dt; });
   zones.forEach(z=>{ [A,B].forEach(p=>{ if(p!==z.owner && Math.hypot(p.x-z.x,p.y-z.y)<z.r){ p.stun=Math.max(p.stun,0.2); p.poison=5; damage(z.owner,p,10*dt,'knowledge'); }}); z.t-=dt; });
+  effects.forEach(e=>{ if(e.type==='spark'){e.x+=e.vx*dt; e.y+=e.vy*dt;} e.t-=dt;}); banners.forEach(b=>b.t-=dt);
   for(let i=bullets.length-1;i>=0;i--) if(bullets[i].t<=0||bullets[i].bounce<0) bullets.splice(i,1);
   for(let i=zones.length-1;i>=0;i--) if(zones[i].t<=0) zones.splice(i,1);
-  if(A.hp<=0||B.hp<=0){ over=true; }
+  for(let i=effects.length-1;i>=0;i--) if(effects[i].t<=0) effects.splice(i,1);
+  for(let i=banners.length-1;i>=0;i--) if(banners[i].t<=0) banners.splice(i,1);
+  if(A.hp<=0||B.hp<=0) over=true;
  }
  draw(); requestAnimationFrame(tick);
 }
-function worldToScreen(x,y){ return {x:(x+25)/50*canvas.width, y:(y+25)/50*canvas.height}; }
-function drawPlayer(p,color){ const s=worldToScreen(p.x,p.y); const px=14; ctx.fillStyle=color; ctx.fillRect(s.x-px,s.y-px,px*2,px*2); ctx.fillStyle="#111"; ctx.fillRect(s.x-4,s.y-3,3,3); ctx.fillRect(s.x+1,s.y-3,3,3); if(p.stun>0){ctx.fillStyle='#fff';ctx.fillText('晕',s.x-4,s.y-18);} }
+function drawPlayer(p,color){ const s=worldToScreen(p.x,p.y); const px=14; ctx.fillStyle=color; ctx.fillRect(s.x-px,s.y-px,px*2,px*2); if(p.inv>0){ctx.strokeStyle='#fff';ctx.strokeRect(s.x-px-2,s.y-px-2,px*2+4,px*2+4);} if(p.shield>0){ctx.strokeStyle='#8be9ff';ctx.strokeRect(s.x-px-6,s.y-px-6,px*2+12,px*2+12);} ctx.fillStyle="#111"; ctx.fillRect(s.x-4,s.y-3,3,3); ctx.fillRect(s.x+1,s.y-3,3,3); if(p.stun>0){ctx.fillStyle='#fff';ctx.fillText('晕',s.x-4,s.y-18);} }
+function drawEffects(){ effects.forEach(e=>{ if(e.type==='pulse'){const s=worldToScreen(e.x,e.y); const a=e.t/e.maxT; ctx.beginPath(); ctx.strokeStyle=`${e.color}${Math.floor(a*255).toString(16).padStart(2,'0')}`; ctx.lineWidth=3; ctx.arc(s.x,s.y,(1-a)*e.r/50*canvas.width,0,Math.PI*2); ctx.stroke();}
+  else if(e.type==='spark'){const s=worldToScreen(e.x,e.y); ctx.fillStyle=e.color; ctx.fillRect(s.x,s.y,3,3);} else if(e.type==='slash'){const s1=worldToScreen(e.x1,e.y1),s2=worldToScreen(e.x2,e.y2); ctx.strokeStyle=e.color; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(s1.x,s1.y); ctx.lineTo(s2.x,s2.y); ctx.stroke(); }});
+}
+function drawBanners(){ banners.forEach((b,i)=>{ const y=28+i*28; ctx.globalAlpha=Math.max(0,b.t); ctx.fillStyle=b.side===0?'#4254d8':'#d84579'; ctx.fillRect(12,y,360,22); ctx.fillStyle='#fff'; ctx.font='14px monospace'; ctx.fillText(`技能释放: ${b.text}`,18,y+16); ctx.globalAlpha=1; }); }
 function draw(){ ctx.clearRect(0,0,canvas.width,canvas.height); ctx.strokeStyle="#2f3d6d"; for(let i=0;i<=10;i++){ const x=i/10*canvas.width; const y=i/10*canvas.height; ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke(); ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke(); }
   zones.forEach(z=>{ const s=worldToScreen(z.x,z.y); ctx.beginPath(); ctx.fillStyle='rgba(120,255,120,0.25)'; ctx.arc(s.x,s.y,z.r/50*canvas.width,0,Math.PI*2); ctx.fill(); });
-  bullets.forEach(b=>{ const s=worldToScreen(b.x,b.y); ctx.fillStyle='#fff'; ctx.fillRect(s.x-3,s.y-3,6,6); });
-  drawPlayer(A,A.color); drawPlayer(B,B.color);
+  bullets.forEach(b=>{ const s=worldToScreen(b.x,b.y); ctx.fillStyle='#fff'; ctx.fillRect(s.x-4,s.y-4,8,8); });
+  drawEffects(); drawPlayer(A,A.color); drawPlayer(B,B.color); drawBanners();
   const winner = A.hp<=0?B.name:B.hp<=0?A.name:'';
   hud.innerHTML = `<div class='card'><b>P1 ${A.name}</b> HP ${Math.max(0,A.hp|0)}/${A.hpMax}<br>CD: A:${A.cd.toFixed(1)} S1:${A.s1cd.toFixed(1)} S2:${A.s2cd.toFixed(1)}</div><div class='card'><b>P2 ${B.name}</b> HP ${Math.max(0,B.hp|0)}/${B.hpMax}<br>CD: A:${B.cd.toFixed(1)} S1:${B.s1cd.toFixed(1)} S2:${B.s2cd.toFixed(1)}</div>`;
   if(over){ ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.fillStyle='#fff'; ctx.font='32px monospace'; ctx.fillText(`胜者: ${winner}`,canvas.width/2-90,canvas.height/2); }
