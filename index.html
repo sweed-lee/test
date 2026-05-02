@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>班级斗蛐蛐 1v1 - 像素版</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <h1>班级斗蛐蛐 · 1v1像素PVP</h1>
+    <p class="hint">P1: WASD移动 / F普攻 / G技能1 / H技能2 ｜ P2: ↑↓←→移动 / /普攻 / .技能1 / ,技能2</p>
+    <p class="hint">✨ 新增技能特效：释放时会弹出技能名、环形脉冲、斩击线与粒子火花。</p>
+    <div class="hud" id="hud"></div>
+    <canvas id="game" width="900" height="620"></canvas>
+    <section class="panel">
+      <h2>角色图鉴（节选 8 名）</h2>
+      <div id="roster" class="roster"></div>
+      <h3>规则改动说明（从3v3改为1v1）</h3>
+      <ul>
+        <li>改为每局双方各1名角色，开局随机抽取2名，不再有队友与AI第四人。</li>
+        <li>地图改为 50×50 抽象坐标，中心为原点；初始点固定为 (-20,0) 与 (20,0)。</li>
+        <li>原本“队友相关”技能统一简化为“自我强化/吸血/护盾”等等，保证可玩性。</li>
+        <li>部分复杂技能（例如全图黑幕、多棋子系统）压缩为单一可视化效果。</li>
+        <li>素材采用程序绘制像素风色块，不额外下载素材（保证免费可分发）。</li>
+      </ul>
+    </section>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
